@@ -1,8 +1,5 @@
 FROM gcc:#GCC#
 
-ARG github_repo=MeVisLab/pythonqt
-ARG github_branch=master
-
 RUN apt-get update && apt-get install -y --force-yes \
     unzip \
     wget \
@@ -25,16 +22,11 @@ RUN apt-get update && apt-get install -y --force-yes \
     qtmultimedia5-dev
 RUN apt-get clean
 
-RUN useradd -u 1000 pythonqt
+RUN mkdir -p work
 
-RUN mkdir -p work \
-    && wget https://github.com/$github_repo/archive/$github_branch.zip -O archive.zip \
-    && unzip archive.zip -d work
-RUN WORK_DIR=`ls -d work/*`; mv $WORK_DIR work/pythonqt
-RUN chown -R pythonqt:pythonqt work/pythonqt
-WORKDIR work/pythonqt
+COPY . work/
 
-USER pythonqt
+WORKDIR work
 
 ARG QT_SELECT=qt5
 RUN uname -a; gcc --version | grep "gcc"; python3 --version; qmake --version
@@ -43,4 +35,4 @@ RUN qmake -r PythonQt.pro \
     PYTHON_VERSION=$(python3 --version | cut -d " " -f 2 | cut -d "." -f1,2) \
     PYTHON_DIR=$(which python3 | xargs dirname | xargs dirname)
 
-CMD ["make"]
+#CMD ["make"]
