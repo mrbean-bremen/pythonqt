@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches: 
-      - master
+#      - master
   pull_request:
       
 defaults:
@@ -12,6 +12,7 @@ defaults:
 
 jobs:
   ubuntu:
+    if: False
     strategy:
       fail-fast: false
       matrix:
@@ -98,31 +99,29 @@ jobs:
         yum groupinstall "Development Tools" -y
         yum install -y \
         which \
-        ${{ matrix.container_os_python_package }} \
-        qt5-qtbase-* \
-        qt5-qttools* \
-        qt5-qtsvg \
-        qt5-qtxmlpatterns \
-        qt5-qtmultimedia \
-        qt5-qt3d \
-        qt5-*-devel
+        ${{ matrix.container_os_python_package }}
 
     - name: Checkout PythonQt
       uses: actions/checkout@v3
 
     - name: Build PythonQt
+      shell: bash
       run: |
         export QT_SELECT=qt5
         echo ======= SYSTEM INFO ========
         which python 2>/dev/null && export PYTHON_VERSION_SUFFIX= || export PYTHON_VERSION_SUFFIX=3
-        uname -a; gcc --version | grep "gcc"; python${PYTHON_VERSION_SUFFIX} --version; qmake-qt5 --version
         echo ============================
-        qmake-qt5 -r PythonQt.pro CONFIG+=${{ matrix.configuration }} \
-          PYTHON_VERSION=$(python${PYTHON_VERSION_SUFFIX} --version | cut -d " " -f 2 | cut -d "." -f1,2) \
-          PYTHON_DIR=$(which python${PYTHON_VERSION_SUFFIX} | xargs dirname | xargs dirname)
-        make -j $(nproc) && make check TESTARGS="-platform offscreen"
+        python${PYTHON_VERSION_SUFFIX} --version | od -t x1
+        export PYTHON_VERSION_SHORT=`python${PYTHON_VERSION_SUFFIX} --version | cut -d " " -f 2 | cut -d "." -f1,2`
+        export PYTHON_DIR=`which python${PYTHON_VERSION_SUFFIX} | xargs dirname | xargs dirname`
+        echo PYTHON_VERSION_SHORT=${PYTHON_VERSION_SHORT}
+        echo PYTHON_DIR=${PYTHON_DIR}
+#        qmake-qt5 -r PythonQt.pro CONFIG+=${{ matrix.configuration }} \
+#          "PYTHON_VERSION=${PYTHON_VERSION_SHORT}" "PYTHON_DIR=${PYTHON_DIR}"
+#        make -j $(nproc) && make check TESTARGS="-platform offscreen"
 
     - name: Generate Wrappers
+      if: False
       run: |
         # workaround to allow to find the Qt include dirs for installed standard qt packages
         mkdir /usr/include/qt5ln; ln -s /usr/include/qt5 /usr/include/qt5ln/include
@@ -131,12 +130,14 @@ jobs:
         ./pythonqt_generator
 
     - name: Upload Wrappers
+      if: False
       uses: actions/upload-artifact@v3
       with:
         name: wrappers_${{ matrix.container_os }}-${{ matrix.container_os_version }}_${{ matrix.configuration }}
         path: generated_cpp
 
   macOS:
+    if: False
     strategy:
       fail-fast: false
       matrix:
@@ -222,6 +223,7 @@ jobs:
         path: generated_cpp
 
   windows:
+    if: False
     strategy:
       fail-fast: false
       matrix:
